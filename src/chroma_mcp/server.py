@@ -660,12 +660,16 @@ def process_thought(input_data: Dict) -> Dict:
 def main():
     """Entry point for the Chroma MCP server."""
     parser = create_parser()
+    parser.add_argument('--transport', default=os.getenv('MCP_TRANSPORT', 'stdio'), help='Transport to use (stdio or http)')
+    parser.add_argument('--port', type=int, default=int(os.getenv('MCP_PORT', '8080')), help='Port to use for HTTP transport')
     args = parser.parse_args()
     
     if args.dotenv_path:
         load_dotenv(dotenv_path=args.dotenv_path)
         # re-parse args to read the updated environment variables
         parser = create_parser()
+        parser.add_argument('--transport', default=os.getenv('MCP_TRANSPORT', 'stdio'), help='Transport to use (stdio or http)')
+        parser.add_argument('--port', type=int, default=int(os.getenv('MCP_PORT', '8080')), help='Port to use for HTTP transport')
         args = parser.parse_args()
     
     # Validate required arguments based on client type
@@ -690,8 +694,12 @@ def main():
         raise
     
     # Initialize and run the server
-    print("Starting MCP server")
-    mcp.run(transport='stdio')
+    print(f"Starting MCP server with {args.transport} transport")
+    if args.transport == 'http':
+        print(f"Listening on port {args.port}")
+        mcp.run(transport='http', port=args.port)
+    else:
+        mcp.run(transport='stdio')
     
 if __name__ == "__main__":
     main()
